@@ -288,7 +288,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <Target Name="_BlazorWasmPrepareForRun" DependsOnTargets="_ProcessBlazorWasmOutputs" BeforeTargets="_RazorPrepareForRun" AfterTargets="GetCurrentProjectStaticWebAssets">
+  <Target Name="_BlazorWasmPrepareForRun" DependsOnTargets="_ProcessBlazorWasmOutputs" BeforeTargets="_RazorPrepareForRun" DependsOnTargets="ResolveStaticWebAssetsInputs;GenerateJSModulesManifest">
     <PropertyGroup>
       <_BlazorBuildBootJsonPath>$(IntermediateOutputPath)blazor.boot.json</_BlazorBuildBootJsonPath>
       <_BlazorOutputContent>@(_BlazorOutputWithHash)</_BlazorOutputContent>

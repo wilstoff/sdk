@@ -84,12 +84,20 @@ Copyright (c) .NET Foundation. All rights reserved.
         '$(RazorLangVersion)' == 'Experimental' OR
         ('$(RazorLangVersion)' != '' AND '$(RazorLangVersion)' >= '3.0')">true</_Targeting30OrNewerRazorLangVersion>
 
+        <_Targeting50OrNewerRazorLangVersion Condition="
+        '$(RazorLangVersion)' == 'Latest' OR
+        '$(RazorLangVersion)' == 'Experimental' OR
+        ('$(RazorLangVersion)' != '' AND '$(RazorLangVersion)' >= '5.0')">true</_Targeting50OrNewerRazorLangVersion>        
+
     <!-- Controls whether or not the static web assets feature is enabled. By default is enabled for netcoreapp3.0
          applications and RazorLangVersion 3 or above. -->
     <StaticWebAssetsEnabled Condition="'$(StaticWebAssetsEnabled)' == ''">$(_Targeting30OrNewerRazorLangVersion)</StaticWebAssetsEnabled>
 
-    <!-- Controls whether or not the scoped css feature is enabled. By default is enabled for net6.0 applications and RazorLangVersion 5 or above -->
+    <!-- Controls whether or not the scoped css feature is enabled. By default is enabled for net3.0 applications and RazorLangVersion 3 or above -->
     <ScopedCssEnabled Condition="'$(ScopedCssEnabled)' == '' and '$(StaticWebAssetsEnabled)' == 'true'">$(_Targeting30OrNewerRazorLangVersion)</ScopedCssEnabled>
+
+    <!-- Controls whether or not the scoped css feature is enabled. By default is enabled for net6.0 applications and RazorLangVersion 6 or above -->
+    <JsModulesEnabled Condition="'$(JsModulesEnabled)' == '' and '$(StaticWebAssetsEnabled)' == 'true'">$(_Targeting50OrNewerRazorLangVersion)</JsModulesEnabled>
   </PropertyGroup>
 
 
@@ -371,6 +379,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Import Project="Microsoft.NET.Sdk.Razor.SourceGenerators.targets" Condition="'$(_UseRazorSourceGenerator)' == 'true'" />
 
   <Import Project="Microsoft.NET.Sdk.Razor.ScopedCss.targets" Condition="'$(ScopedCssEnabled)' == 'true'" />
+
+  <Import Project="Microsoft.NET.Sdk.Razor.JsModules.targets" Condition="'$(JsModulesEnabled)' == 'true'" />
 
   <Import Project="Microsoft.NET.Sdk.Razor.StaticWebAssets.targets" Condition="'$(StaticWebAssetsEnabled)' == 'true'" />
 

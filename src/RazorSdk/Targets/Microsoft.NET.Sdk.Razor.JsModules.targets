@@ -1,0 +1,204 @@
+<!--
+***********************************************************************************************
+Microsoft.NET.Sdk.Razor.JsModule.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+          created a backup copy.  Incorrect changes to this file will make it
+          impossible to load or build your projects from the command-line or the IDE.
+
+Copyright (c) .NET Foundation. All rights reserved.
+***********************************************************************************************
+-->
+
+<Project ToolsVersion="14.0">
+
+  <!-- General description of the JS modules pipeline and its integration with static web assets:
+  * JS module files get discovered and put into a JsModule itemgroup.
+  * Any file with a module.lib.js extension gets processed as a JS module file. That means:
+    * It will be included in a generated list of module files "<project-name>.modules.json"
+    * Users can define their own convention by adding their own JsModule file to the item group.
+    * For web applications (Blazor webassembly and Blazor server) the main project is responsible for producing a bundle <project-name>.modules.json that will contain the list of modules to load
+  * For packing in razor class libraries, the JsModule files will get processed and added as static web assets to the pack.
+  
+  Integration with static web assets:
+  * The JS modules will be added as regular static web assets to participate in the pipeline.
+    * Generated JS module files will have a unique extension '.module.lib.js' that will be used by the pipeline to identify them as such unless otherwise identified.
+  * In razor class libraries these generated files will be packaged normally as part of the static web assets process and will be accessible at <<StaticWebAssetsBasePath>>/<<RelativePath>>.
+    * Using the extension is useful as it allows for third party tooling to do alternative processing in an easy way, these files will be
+      removed off from the list of static web assets when the default bundling is enabled, so they won't show up in the final output.
+  -->
+  
+  <UsingTask TaskName="Microsoft.AspNetCore.Razor.Tasks.GenerateJsModuleManifest"  AssemblyFile="$(RazorSdkBuildTasksAssembly)" />
+  
+  <PropertyGroup>
+  
+    <ResolveCurrentProjectStaticWebAssetsInputsDependsOn>    
+      ResolveJsModuleInputs;
+      $(ResolveCurrentProjectStaticWebAssetsInputsDependsOn);
+    </ResolveCurrentProjectStaticWebAssetsInputsDependsOn>
+  
+    <PrepareForRunDependsOn>
+      _PrepareForJsModule;
+      $(PrepareForRunDependsOn)
+    </PrepareForRunDependsOn>
+  
+    <_PrepareForJsModuleDependsOn>
+      _GenerateJsModuleManifest;
+      $(_PrepareForJsModuleDependsOn)
+    </_PrepareForJsModuleDependsOn>
+  
+    <ResolveCurrentProjectStaticWebAssetsInputsDependsOn>
+      $(ResolveCurrentProjectStaticWebAssetsInputsDependsOn);
+    </ResolveCurrentProjectStaticWebAssetsInputsDependsOn>
+  
+    <!-- We want to include the JSON manifest as part of the list of static web assets -->
+    <ResolveStaticWebAssetsInputsDependsOn>
+      $(ResolveStaticWebAssetsInputsDependsOn);
+      ResolveExternalJsModuleInputs;
+      _AddJsModuleManifest;
+    </ResolveStaticWebAssetsInputsDependsOn>
+  
+    <GenerateStaticWebAssetsPackTargetsDependsOn>
+      $(GenerateStaticWebAssetsPackTargetsDependsOn);
+      _RemoveJsModuleManifestFromPack;
+    </GenerateStaticWebAssetsPackTargetsDependsOn>
+  
+    <!-- We are going to use .lib.module.js as the extension to mark scoped css files that come from packages or that have been pre-procesed by
+         referenced class libraries. This way, we can use that information to adjust the build pipeline without having to rely on external
+         sources like an additional itemgroup or metadata.
+    -->
+    <_JsModuleExtension>.lib.module.js</_JsModuleExtension>
+  </PropertyGroup>
+  
+  <Target Name="_PrepareForJsModule" DependsOnTargets="$(_PrepareForJsModuleDependsOn)" />
+  
+  <Target Name="ResolveJsModuleInputs">
+  
+    <ItemGroup>
+      <!-- Package module files need to end in .lib.module.js and be present on the wwwroot folder. -->
+      <_CurrentProjectJsModuleInput
+      Include="@(Content)"
+      Condition="$([System.String]::Copy('%(Identity)').Replace('\','/').StartsWith('wwwroot/')) and $([System.String]::Copy('%(Identity)').EndsWith('.lib.module.js'))">
+        <ModuleImportPath>$([System.String]::Copy('%(Identity)').Replace('\','/').Replace('wwwroot/', ''))</ModuleImportPath>
+      </_CurrentProjectJsModuleInput>
+
+      <JsModuleInput Include="@(_CurrentProjectJsModuleInput)" />
+      
+      <!-- Convention for .razor.js files that live outside the wwwroot folder is to include them as static web assets that will end
+           up in the wwwroot folder on the same relative path as where they are on the project prefixed by the $(StaticWebAssetBasePath).
+           For example:
+  
+           A razor file Pages/Index.razor with an associated JS file Pages/Index.Razor.js will cause Pages/Index.razor.js to end up in
+           wwwroot/$(StaticWebAssetBasePath)/Pages/Index.razor.js
+      -->
+  
+      <_CurrentProjectScopedJsModule
+        Include="@(Content)"
+        Condition="$([System.String]::Copy('%(Identity)').Replace('\','/').StartsWith('wwwroot/')) and $([System.String]::Copy('%(Identity)').EndsWith('.razor.js'))">
+      </_CurrentProjectScopedJsModule>
+  
+      <!-- These need to be included in SWA explicitly since they won't be captured by the default convention -->
+      <StaticWebAsset Include="@(_CurrentProjectScopedJsModule->'%(FullPath)')" RemoveMetadata="ExcludeFromSingleFile">
+        <SourceType></SourceType>
+        <SourceId>$(PackageId)</SourceId>
+        <!-- This can be a bit tricky becasue we are causing static web assets to serve these files as we are now serving files from 
+          $(MSBuildProjectDirectory) in development and that can get ugly. We could consider limiting our convention to only serving
+          files from the `/Pages` and `/Components` folders as a way to narrow this down and avoid potential trouble. Alternatively
+          we could make the SWA file provider "smarter" by avoiding serving all folders.
+  
+          The reason this works for CSS isolation is because there is a compile step that puts them on the obj folder, however that
+          prevents those files from automatically refreshing without a compile step, which we want to avoid in this case.
+         -->
+        <ContentRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)'))</ContentRoot>
+        <!-- Subsection (folder) from the url space where content for this library will be served. -->
+        <BasePath>$(StaticWebAssetBasePath)</BasePath>
+        <!-- Relative path from the content root for the file. At publish time, we combine the BasePath + Relative
+             path to determine the final path for the file.
+        -->
+        <RelativePath>%(_CurrentProjectScopedJsModule.ModuleImportPath)</RelativePath>
+  
+      </StaticWebAsset>
+
+    </ItemGroup>
+  
+  </Target>
+  
+  <Target Name="ResolveExternalJsModuleInputs">
+    
+    <ItemGroup>
+      <_ExternalJsModuleInputs Include="%(StaticWebAsset)" Condition="%(SourceType) != ''">
+        <ModuleImportPath>$([System.String]::Copy('%(BasePath)\%(RelativePath)').Replace('\','/').Replace('//','/').TrimStart('/'))</ModuleImportPath>
+      </_ExternalJsModuleInputs>
+      <JsModuleInput Include="@(_ExternalJsModuleInputs)" />
+    </ItemGroup>
+  
+  </Target>
+  
+  <!-- We are going to generate this asset inside the obj folder, so we will put it in its own folder to avoid serving other files via swa -->
+  <!-- Blazor webassembly will 'inline' this file into the blazor.boot.json manifest and remove it from SWA. -->
+  <!-- Blazor server will read this file contents during startup and will 'inline' the contents on the first component it renders on the page. -->
+  <!-- Blazor desktop will request the file directly from the newtork since there is no latency overhead. -->
+  <Target Name="_AddJsModuleManifest">
+  
+    <PropertyGroup>
+      <_JsModuleManifestOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)jsmodules\manifest\$(PackageId).modules.json'))</_JsModuleManifestOutputPath>
+    </PropertyGroup>
+  
+    <ItemGroup Condition="'@(JsModuleInput)' != ''">
+      <_JsManifestStaticWebAsset Include="$(_JsModuleManifestOutputPath)">
+        <SourceType></SourceType>
+        <SourceId>$(PackageId)</SourceId>
+        <ContentRoot>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)jsmodules\manifest\'))</ContentRoot>
+        <!-- Subsection (folder) from the url space where content for this library will be served. -->
+        <BasePath>$(StaticWebAssetBasePath)</BasePath>
+        
+        <!-- Relative path from the content root for the file. At publish time, we combine the BasePath + Relative
+             path to determine the final path for the file.
+        -->
+        <RelativePath>$(PackageId).modules.json</RelativePath>
+  
+      </_JsManifestStaticWebAsset>
+  
+      <StaticWebAsset Include="@(_JsManifestStaticWebAsset)" />
+  
+      <!-- We need to do this to ensure these assets get copied to the output folder. -->
+      <_ExternalPublishStaticWebAsset Include="@(_JsManifestStaticWebAsset)" ExcludeFromSingleFile="true">
+        <SourceType>generated</SourceType>
+        <SourceId>$(PackageId)</SourceId>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <RelativePath>$([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)',$([MSBuild]::NormalizePath('wwwroot/%(_JsManifestStaticWebAsset.BasePath)/%(_JsManifestStaticWebAsset.RelativePath)'))))</RelativePath>
+      </_ExternalPublishStaticWebAsset>
+  
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="_RemoveJsModuleManifestFromPack">
+  
+    <PropertyGroup>
+      <_JsModuleManifestOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)jsmodules\manifest\$(PackageId).modules.json'))</_JsModuleManifestOutputPath>
+    </PropertyGroup>
+  
+    <ItemGroup>
+      <StaticWebAsset Remove="$(_JsModuleManifestOutputPath)" />
+    </ItemGroup>
+  
+  </Target>
+  
+  <Target Name="_PrepareForJsModule" DependsOnTargets="$(_PrepareForJsModuleDependsOn)" />
+  
+  <Target Name="_GenerateJsModuleManifest">
+    <PropertyGroup>
+      <_JsModuleManifestOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)jsmodules\manifest\$(PackageId).modules.json'))</_JsModuleManifestOutputPath>
+    </PropertyGroup>
+  
+    <GenerateJsModuleManifest
+      OutputFile="$(_JsModuleManifestOutputPath)"
+      JsModules="@(JsModuleInput)" />
+  
+    <ItemGroup>
+      <FileWrites Include="$(_JsModuleManifestOutputPath)" />
+    </ItemGroup>
+
+  </Target>
+
+</Project>  
