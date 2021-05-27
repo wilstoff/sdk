@@ -1,7 +1,14 @@
 {
   "profiles": {
     "dotnet": {
-      "commandName": "Project"
+      "commandName": "Executable",
+      "executablePath": "$(SolutionDir)\\artifacts\\bin\\redist\\Debug\\dotnet\\dotnet.exe",
+      "commandLineArgs": "run --project e:\\dev-sc\\console\\console.csproj",
+      "environmentVariables": {
+        "DOTNET_CLI_RUN_MSBUILD_IN_SERVER": "1",
+        "DOTNET_CLI_RUN_MSBUILD_OUTOFPROC": "0",
+        "MSBUILDDEBUGONSTART": "0"
+      }
     }
   }
 }

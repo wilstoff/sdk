@@ -8,8 +8,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Microsoft.DotNet.Cli.Utils
 {
@@ -77,6 +75,14 @@ namespace Microsoft.DotNet.Cli.Utils
         public string[] GetAllArguments()
         {
             return _msbuildRequiredParameters.Concat(_argsToForward.Select(Escape)).ToArray();
+        }
+
+        public ForwardingAppImplementation GetMSBuildServerForwardingApp(string[] serverStartupParameters)
+        {
+            return new ForwardingAppImplementation(
+                MSBuildPath,
+                _msbuildRequiredParameters.Concat(serverStartupParameters.Select(Escape)).ToArray(),
+                environmentVariables: _msbuildRequiredEnvironmentVariables);
         }
 
         public void EnvironmentVariable(string name, string value)
