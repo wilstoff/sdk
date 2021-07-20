@@ -11,6 +11,8 @@ namespace Microsoft.DotNet.PackageValidation
     {
         [Required]
         public string PackageTargetPath { get; set; }
+        
+        public string RoslynPath { get; set; } 
 
         public string RuntimeGraph { get; set; }
 
@@ -30,6 +32,33 @@ namespace Microsoft.DotNet.PackageValidation
 
         public string CompatibilitySuppressionFilePath { get; set; }
 
+        public override bool Execute()
+        {
+            if (!string.IsNullOrEmpty(RoslynPath))
+              AppDomain.CurrentDomain.AssemblyResolve += ResolverForRoslyn;
+
+            try
+            {
+                return base.Execute();
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(RoslynPath))
+                  AppDomain.CurrentDomain.AssemblyResolve -= ResolverForRoslyn;
+            }
+        }
+        
+        private static Assembly ResolverForRoslyn(object sender, ResolveEventArgs args)
+        {
+            AssemblyName name = new(args.Name);
+            return name.Name switch
+            {
+                "Microsoft.CodeAnalysis" or "Microsoft.CodeAnalysis.CSharp" =>
+                    Assembly.LoadFrom(Path.Combine(RoslynPath, $"{name.Name}.dll")),
+                _ => null,
+            };
+        }
+        
         protected override void ExecuteCore()
         {
             RuntimeGraph runtimeGraph = null;
