@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -111,7 +112,11 @@ namespace Microsoft.AspNetCore.Razor.Tasks
             {
                 var jsModuleCandidate = unmatchedJsModules[i];
                 var explicitRazorItem = jsModuleCandidate.GetMetadata(explicitMetadataName);
-                var jsModuleCandidatePath = jsModuleCandidate.GetMetadata("RelativePath").Replace('/','\\');
+                var jsModuleCandidatePath = jsModuleCandidate.GetMetadata("RelativePath");
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    jsModuleCandidatePath = jsModuleCandidatePath.Replace('/', '\\');
+                }
 
                 var razorItem = !string.IsNullOrWhiteSpace(explicitRazorItem) ?
                     explicitRazorItem :
