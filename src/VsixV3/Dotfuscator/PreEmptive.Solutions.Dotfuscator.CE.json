@@ -1,1 +1,24 @@
-{"manifestVersion":"1.1","info":{"id":"PreEmptive.Solutions.Dotfuscator.CE,version=6.5.0.0"},"packages":[{"id":"PreEmptive.Solutions.Dotfuscator.CE","version":"6.5.0.0","type":"Vsix","payloads":[{"fileName":"DotfuscatorCE_6.5.0.vsix","size":16403265}],"vsixId":"PreEmptive.Solutions.Dotfuscator.CE","extensionDir":"[installdir]\\Common7\\IDE\\Extensions\\PreEmptiveSolutions\\DotfuscatorCE","installSizes":{"targetDrive":49451376}}]}
+{
+    "manifestVersion": "1.1",
+    "info": {
+        "id": "PreEmptive.Solutions.Dotfuscator.CE,version=6.5.0.0"
+    },
+    "packages": [
+        {
+            "id": "PreEmptive.Solutions.Dotfuscator.CE",
+            "version": "6.5.0.0",
+            "type": "Vsix",
+            "payloads": [
+                {
+                    "fileName": "DotfuscatorCE.vsix",
+                    "size": 16408576
+                }
+            ],
+            "vsixId": "PreEmptive.Solutions.Dotfuscator.CE",
+            "extensionDir": "[installdir]\\Common7\\IDE\\Extensions\\PreEmptiveSolutions\\DotfuscatorCE",
+            "installSizes": {
+                "targetDrive": 50053120
+            }
+        }
+    ]
+}
