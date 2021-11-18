@@ -64,7 +64,7 @@ namespace Microsoft.NET.Sdk.Razor.SourceGenerators
                 {
                     var ((componentFilesB, importFilesB), razorSourceGeneratorOptionsB) = b;
 
-                    return razorSourceGeneratorOptionsB.SuppressRazorSourceGenerator || a.Equals(b);
+                    return razorSourceGeneratorOptionsB.SuppressRazorSourceGenerator || (a.Left.Equals(b.Left) && a.Right.EqualsIgnoringSupression(b.Right));
                 },
                 static (pair) =>
                 {
