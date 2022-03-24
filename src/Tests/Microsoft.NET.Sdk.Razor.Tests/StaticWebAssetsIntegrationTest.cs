@@ -16,6 +16,7 @@ using NuGet.Packaging;
 using System;
 using System.Collections.Generic;
 using Microsoft.NET.TestFramework.Utilities;
+using Microsoft.AspNetCore.StaticWebAssets.Tasks;
 
 namespace Microsoft.NET.Sdk.Razor.Tests
 {

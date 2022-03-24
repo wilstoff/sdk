@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
 using Microsoft.AspNetCore.Razor.Tasks;
+using Microsoft.AspNetCore.StaticWebAssets.Tasks;
 using Microsoft.Build.Framework;
 using Moq;
 using Xunit;

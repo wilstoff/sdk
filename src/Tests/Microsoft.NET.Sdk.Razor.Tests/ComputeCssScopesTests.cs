@@ -8,6 +8,7 @@ using FluentAssertions;
 using Microsoft.Build.Utilities;
 using Microsoft.AspNetCore.Razor.Tasks;
 using Xunit;
+using Microsoft.AspNetCore.StaticWebAssets.Tasks;
 
 namespace Microsoft.NET.Sdk.Razor.Test
 {

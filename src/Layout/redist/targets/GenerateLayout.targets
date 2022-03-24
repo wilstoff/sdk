@@ -158,6 +158,7 @@
       <NETSdkWorkerSourceRoot>$(ArtifactsBinDir)$(Configuration)\Sdks\Microsoft.NET.Sdk.Worker</NETSdkWorkerSourceRoot>
       <NETSdkBlazorWasmSourceRoot>$(ArtifactsBinDir)$(Configuration)\Sdks\Microsoft.NET.Sdk.BlazorWebAssembly</NETSdkBlazorWasmSourceRoot>
       <NETSdkRazorSourceRoot>$(ArtifactsBinDir)$(Configuration)\Sdks\Microsoft.NET.Sdk.Razor</NETSdkRazorSourceRoot>
+      <NETSdkStaticWebAssetsSourceRoot>$(ArtifactsBinDir)$(Configuration)\Sdks\Microsoft.NET.Sdk.StaticWebAssets</NETSdkStaticWebAssetsSourceRoot>
     </PropertyGroup>
     <ItemGroup>
       <NETSdksContent Include="$(NETSdkSourceRoot)\**\*.*"
@@ -174,6 +175,8 @@
                      DeploymentSubPath="Sdks\Microsoft.NET.Sdk.BlazorWebAssembly"/>
       <NETSdksContent Include="$(NETSdkRazorSourceRoot)\**\*.*"
                      DeploymentSubPath="Sdks\Microsoft.NET.Sdk.Razor"/>
+      <NETSdksContent Include="$(NETSdkStaticWebAssetsSourceRoot)\**\*.*"
+                     DeploymentSubPath="Sdks\Microsoft.NET.Sdk.StaticWebAssets"/>
     </ItemGroup>
     <Copy SourceFiles="@(NETSdksContent)"
       DestinationFiles="@(NETSdksContent->'$(OutputPath)\%(DeploymentSubpath)\%(RecursiveDir)%(Filename)%(Extension)')" />

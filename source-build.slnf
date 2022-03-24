@@ -26,6 +26,7 @@
       "src\\RazorSdk\\SourceGenerators\\Microsoft.NET.Sdk.Razor.SourceGenerators.csproj",
       "src\\RazorSdk\\Tasks\\Microsoft.NET.Sdk.Razor.Tasks.csproj",
       "src\\RazorSdk\\Tool\\Microsoft.NET.Sdk.Razor.Tool.csproj",
+      "src\\StaticWebAssetsSdk\\Tasks\\Microsoft.NET.Sdk.StaticWebAssets.Tasks.csproj",
       "src\\Resolvers\\Microsoft.DotNet.MSBuildSdkResolver\\Microsoft.DotNet.MSBuildSdkResolver.csproj",
       "src\\Resolvers\\Microsoft.DotNet.NativeWrapper\\Microsoft.DotNet.NativeWrapper.csproj",
       "src\\Resolvers\\Microsoft.DotNet.SdkResolver\\Microsoft.DotNet.SdkResolver.csproj",

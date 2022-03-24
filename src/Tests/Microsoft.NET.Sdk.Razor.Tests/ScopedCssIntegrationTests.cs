@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using FluentAssertions;
 using Microsoft.AspNetCore.Razor.Tasks;
+using Microsoft.AspNetCore.StaticWebAssets.Tasks;
 using Microsoft.Build.Evaluation;
 using Microsoft.NET.TestFramework;
 using Microsoft.NET.TestFramework.Assertions;
