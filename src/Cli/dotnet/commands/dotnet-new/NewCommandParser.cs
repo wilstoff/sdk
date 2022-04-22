@@ -15,6 +15,9 @@ using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.TemplatePackage;
 using Microsoft.TemplateEngine.Edge;
 using System.Linq;
+using Microsoft.DotNet.Tools.Sln.Add;
+using Microsoft.DotNet.Tools.Add.ProjectToProjectReference;
+using Microsoft.DotNet.Tools.Add.PackageReference;
 
 namespace Microsoft.DotNet.Cli
 {
@@ -30,7 +33,8 @@ namespace Microsoft.DotNet.Cli
 
         public static System.CommandLine.Command GetCommand()
         {
-            var getLogger = (ParseResult parseResult) => {
+            var getLogger = (ParseResult parseResult) =>
+            {
                 var sessionId = Environment.GetEnvironmentVariable(MSBuildForwardingApp.TelemetrySessionIdEnvironmentVariableName);
 
                 // senderCount: 0 to disable sender.
@@ -57,10 +61,14 @@ namespace Microsoft.DotNet.Cli
 
             var callbacks = new Microsoft.TemplateEngine.Cli.NewCommandCallbacks()
             {
-                RestoreProject = RestoreProject
+                RestoreProject = RestoreProject,
+                AddPackageReference = AddPackageReference,
+                AddProjectReferences = AddProjectReferences,
+                AddProjectsToSolution = AddProjectsToSolution
             };
 
-            var getEngineHost = (ParseResult parseResult) => {
+            var getEngineHost = (ParseResult parseResult) =>
+            {
                 var disableSdkTemplates = parseResult.GetValueForOption(_disableSdkTemplates);
                 return CreateHost(disableSdkTemplates);
             };
@@ -86,7 +94,7 @@ namespace Microsoft.DotNet.Cli
             }
 
             string preferredLangEnvVar = Environment.GetEnvironmentVariable("DOTNET_NEW_PREFERRED_LANG");
-            string preferredLang = string.IsNullOrWhiteSpace(preferredLangEnvVar)? "C#" : preferredLangEnvVar;
+            string preferredLang = string.IsNullOrWhiteSpace(preferredLangEnvVar) ? "C#" : preferredLangEnvVar;
 
             var preferences = new Dictionary<string, string>
             {
@@ -102,6 +110,35 @@ namespace Microsoft.DotNet.Cli
         private static bool RestoreProject(string pathToRestore)
         {
             return RestoreCommand.Run(new string[] { pathToRestore }) == 0;
+        }
+
+        private static bool AddProjectsToSolution(string solutionFile, IReadOnlyList<string> projects, string solutionFolder)
+        {
+            if (string.IsNullOrWhiteSpace(solutionFolder))
+            {
+                return new AddProjectToProjectReferenceCommand(Parser.Instance.Parse(new[] { "dotnet", "sln", solutionFile, "add" }.Concat(projects).ToArray())).Execute() == 0;
+            }
+            else
+            {
+                return new AddProjectToProjectReferenceCommand(Parser.Instance.Parse(new[] { "dotnet", "sln", solutionFile, "add", "--solution-folder", solutionFolder }.Concat(projects).ToArray())).Execute() == 0;
+            }
+        }
+
+        private static bool AddProjectReferences(string projectFile, string[] projectReferences)
+        {
+            return new AddProjectToProjectReferenceCommand(Parser.Instance.Parse(new[] { "dotnet", "add", projectFile, "reference" }.Concat(projectReferences).ToArray())).Execute() == 0;
+        }
+
+        private static bool AddPackageReference(string projectFile, string packageName, string packageVersion)
+        {
+            if (string.IsNullOrWhiteSpace(packageVersion))
+            {
+                return new AddPackageReferenceCommand(Parser.Instance.Parse(new[] { "dotnet", "add", projectFile, "package", packageName })).Execute() == 0;
+            }
+            else
+            {
+                return new AddPackageReferenceCommand(Parser.Instance.Parse(new[] { "dotnet", "add", projectFile, "package", packageName, "--version", packageVersion })).Execute() == 0;
+            }
         }
     }
 }
